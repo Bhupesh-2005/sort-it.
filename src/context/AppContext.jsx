@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const AppContext = createContext();
 
@@ -44,6 +44,39 @@ export function AppProvider({ children }) {
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+
+  // ── PWA Install ──
+  const [installPrompt, setInstallPrompt] = useState(null);  // deferred prompt event
+  const [installDismissed, setInstallDismissed] = useState(false); // banner was closed
+  const [isInstalled, setIsInstalled] = useState(() =>
+    window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+  );
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    });
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const triggerInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    }
+    setInstallDismissed(false);
+  };
+
+  const dismissInstall = () => setInstallDismissed(true);
 
   // Persist state
   useEffect(() => localStorage.setItem('sortit_logged_in', String(isLoggedIn)), [isLoggedIn]);
@@ -126,7 +159,8 @@ export function AppProvider({ children }) {
       walletBalance, addMoney, deductMoney, transactions,
       addresses, addAddress, deleteAddress, setDefaultAddress,
       orders, placeOrder,
-      searchQuery, setSearchQuery
+      searchQuery, setSearchQuery,
+      installPrompt, installDismissed, isInstalled, triggerInstall, dismissInstall
     }}>
       {children}
     </AppContext.Provider>

@@ -1,103 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useApp } from '../context/AppContext';
 
 export default function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const { installPrompt, installDismissed, isInstalled, triggerInstall, dismissInstall } = useApp();
 
-  useEffect(() => {
-    // Check if the device is iOS
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(ios);
+  // Check if iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    // Check if app is already installed
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    setIsStandalone(standalone);
+  // For iOS, show the banner once per session until dismissed
+  const showIOSHint = isIOS && !isInstalled && !installDismissed && !sessionStorage.getItem('iosInstallPromptShown');
+  const showAndroidBanner = !isIOS && !isInstalled && installPrompt && !installDismissed;
 
-    // If on iOS and not standalone, we can optionally show the prompt instructions.
-    // However, let's delay showing the prompt directly for iOS so it's not annoying, or show it after a custom delay.
-    if (ios && !standalone) {
-      const iosPromptShown = sessionStorage.getItem('iosInstallPromptShown');
-      if (!iosPromptShown) {
-        setTimeout(() => setIsVisible(true), 3000);
-      }
-    }
-
-    const handler = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      // For Android/Desktop, we show the prompt when the event fires
-      setIsVisible(true);
-    };
-    
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (isIOS) {
-      // Just close it for iOS since they have to use the share menu manually
-      closePrompt();
-      return;
-    }
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    }
-    setDeferredPrompt(null);
-    closePrompt();
+  const handleClose = () => {
+    if (isIOS) sessionStorage.setItem('iosInstallPromptShown', 'true');
+    dismissInstall();
   };
 
-  const closePrompt = () => {
-    if (isIOS) {
-      sessionStorage.setItem('iosInstallPromptShown', 'true');
-    }
-    setIsVisible(false);
-  };
-
-  // Do not show if already in standalone app
-  if (isStandalone) return null;
+  if (isInstalled) return null;
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      {(showAndroidBanner || showIOSHint) && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-auto min-w-[320px] bg-surface text-text p-4 rounded-xl border border-primary/30 shadow-2xl z-50 flex items-center justify-between"
+          className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-auto min-w-[320px] bg-white text-gray-800 p-4 rounded-2xl border border-primary/30 shadow-2xl z-50 flex items-center justify-between gap-4"
         >
           <div className="flex-1">
-            <h3 className="font-bold text-sm md:text-base mb-1 text-text">Install SortIt App</h3>
+            <h3 className="font-bold text-sm md:text-base mb-1">Install sort it. App</h3>
             {isIOS ? (
-              <p className="text-xs md:text-sm text-text-muted font-medium">
-                Tap the <span className="font-bold text-primary">Share</span> button at the bottom and select <span className="font-bold text-text">'Add to Home Screen'</span>.
+              <p className="text-xs md:text-sm text-gray-500 font-medium">
+                Tap <span className="font-bold text-primary">Share</span> then <span className="font-bold text-gray-700">'Add to Home Screen'</span>.
               </p>
             ) : (
-              <p className="text-xs md:text-sm text-text-muted font-medium">Add to your home screen for a fast experience.</p>
+              <p className="text-xs md:text-sm text-gray-500 font-medium">Add to your home screen for a faster experience.</p>
             )}
           </div>
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2">
             {!isIOS && (
               <button
-                onClick={handleInstallClick}
-                className="bg-primary hover:bg-primary-hover text-text p-2.5 rounded-lg flex items-center justify-center transition-colors shadow-md font-bold"
-                title="Install App"
+                onClick={triggerInstall}
+                className="bg-primary hover:bg-primary/90 text-gray-900 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-md"
               >
-                <Download size={20} />
+                <Download size={16} /> Install
               </button>
             )}
             <button
-              onClick={closePrompt}
-              className="text-text-muted hover:text-text p-2 hover:bg-black/5 rounded-lg transition-colors"
-              title="Close"
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </motion.div>

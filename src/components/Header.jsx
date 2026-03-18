@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Search, Wallet, User, ShoppingCart, ChevronDown, Menu } from 'lucide-react';
+import { MapPin, Search, Wallet, User, ShoppingCart, ChevronDown, Menu, Download } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useApp } from '../context/AppContext';
 
 export default function Header() {
   const { cartCount, toggleCart } = useCart();
-  const { walletBalance, user } = useApp();
+  const { walletBalance, user, installPrompt, installDismissed, isInstalled, triggerInstall } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const inputRef = useRef(null);
@@ -74,6 +74,18 @@ export default function Header() {
             {/* Action Icons */}
             <div className="flex items-center gap-4">
               <Link to="/profile" className="p-1"><User size={24} className="text-gray-800" /></Link>
+              {/* Persistent install button (mobile) */}
+              {!isInstalled && installDismissed && installPrompt && (
+                <motion.button
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  onClick={triggerInstall}
+                  title="Install App"
+                  className="p-1 relative"
+                >
+                  <Download size={22} className="text-primary" />
+                </motion.button>
+              )}
               <button onClick={toggleCart} className="p-1 relative scale-110">
                 <ShoppingCart size={24} className="text-gray-800" />
                 {cartCount > 0 && (
@@ -170,6 +182,19 @@ export default function Header() {
               <User size={24} />
               <span className="text-[10px] font-bold mt-1">Profile</span>
             </Link>
+
+            {/* Persistent install button (desktop) */}
+            {!isInstalled && installDismissed && installPrompt && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={triggerInstall}
+                title="Install App"
+                className="flex items-center gap-1.5 text-sm font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-3 py-2 rounded-xl transition-colors"
+              >
+                <Download size={16} /> Install
+              </motion.button>
+            )}
 
             <button 
               onClick={toggleCart} 
