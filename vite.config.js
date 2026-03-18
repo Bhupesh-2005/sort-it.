@@ -13,28 +13,31 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'SortIt. PWA',
-        short_name: 'SortIt.',
-        description: 'A premium, interactive delivery platform.',
-        theme_color: '#FFF9E6',
-        background_color: '#FFF9E6',
+        name: 'sort it.',
+        short_name: 'sort it.',
+        description: 'Your one-stop destination for all your needs. Fast, reliable, and always sorted.',
+        theme_color: '#F7C600',
+        background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/',
+        id: '/',
+        scope: '/',
         icons: [
           {
-            src: 'pwa-192x192.svg',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: 'pwa-512x512.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any'  
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'maskable-icon-512x512.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable'
           }
         ]
