@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text font-sans antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-surface/80 backdrop-blur-md border border-primary/20 shadow-xl rounded-2xl;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 border-none cursor-pointer text-base;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-primary-hover text-text shadow-lg hover:-translate-y-1 hover:shadow-primary/40;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white shadow-lg border border-secondary/20 hover:bg-secondary-hover hover:-translate-y-1;
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-secondary to-primary;
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 1rem 0;
+  border-bottom: 1px solid theme('colors.primary.DEFAULT' / 20%);
+  background: theme('colors.background' / 90%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nav-link {
+  font-weight: 500;
+  color: theme('colors.text.muted');
+  transition: color 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: theme('colors.secondary.DEFAULT');
+}
+
+.main-content {
+  flex: 1;
+}
+
+.card {
+  padding: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
