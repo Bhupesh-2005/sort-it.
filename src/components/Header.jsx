@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Search, Wallet, User, ShoppingCart, ChevronDown, Menu, Download } from 'lucide-react';
+import { MapPin, Search, Wallet, User, ShoppingCart, ChevronDown, Menu, Download, X, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useApp } from '../context/AppContext';
 
 export default function Header() {
   const { cartCount, toggleCart } = useCart();
-  const { walletBalance, user, isLoggedIn, installPrompt, installDismissed, isInstalled, triggerInstall } = useApp();
+  const { walletBalance, user, isLoggedIn, installPrompt, installDismissed, isInstalled, triggerInstall, isIOS } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const inputRef = useRef(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const placeholders = [
     "Search 'vegetables'",
@@ -60,7 +61,12 @@ export default function Header() {
           <div className="flex items-center justify-between">
             {/* Location & Menu */}
             <div className="flex items-center gap-3">
-              <button className="p-1"><Menu size={24} className="text-gray-800" /></button>
+              <button 
+                onClick={() => setIsMenuOpen(true)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <Menu size={24} className="text-gray-800" />
+              </button>
               <div>
                 <h1 className="font-extrabold text-2xl tracking-tight text-primary">sort it.</h1>
                 <div className="flex items-center text-[11px] text-gray-500 font-bold gap-1 mt-0.5">
@@ -77,7 +83,7 @@ export default function Header() {
                 <User size={24} />
               </Link>
               {/* Persistent install button (mobile) */}
-              {!isInstalled && installDismissed && installPrompt && (
+              {!isInstalled && installDismissed && (installPrompt || isIOS) && (
                 <motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -186,7 +192,7 @@ export default function Header() {
             </Link>
 
             {/* Persistent install button (desktop) */}
-            {!isInstalled && installDismissed && installPrompt && (
+            {!isInstalled && installDismissed && (installPrompt || isIOS) && (
               <motion.button
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -212,6 +218,90 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sidebar / Drawer */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm md:hidden"
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.3 }}
+              className="fixed top-0 left-0 h-full w-[280px] bg-white z-[70] shadow-2xl flex flex-col md:hidden"
+            >
+              {/* Drawer Header */}
+              <div className="p-6 bg-gradient-to-br from-secondary to-[#145c38] text-white">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="font-extrabold text-2xl tracking-tight text-primary">sort it.</span>
+                  <button onClick={() => setIsMenuOpen(false)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                    <X size={24} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+                    <User size={24} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg leading-tight">{isLoggedIn ? user.name : 'Welcome Guest'}</p>
+                    <p className="text-xs text-white/60">{isLoggedIn ? user.phone : 'Sign in to track orders'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Content */}
+              <div className="flex-1 overflow-y-auto py-4">
+                <div className="px-4 mb-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Menu</p>
+                  <div className="space-y-1">
+                    {[
+                      { icon: MapPin, label: 'Home', path: '/' },
+                      { icon: Search, label: 'Browse All Items', path: '/all-items' },
+                      { icon: Wallet, label: 'Wallet', path: '/wallet' },
+                      { icon: ShoppingCart, label: 'My Orders', path: '/orders' },
+                      { icon: User, label: isLoggedIn ? 'My Profile' : 'Sign In / Sign Up', path: '/profile' },
+                      { icon: MapPin, label: 'Address Book', path: '/addresses' },
+                      { icon: Download, label: 'Customer Support', path: '/support' }
+                    ].map((item, i) => (
+                      <Link
+                        key={i}
+                        to={item.path}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 rounded-xl transition-colors font-bold text-gray-700"
+                      >
+                        <item.icon size={20} className="text-gray-400" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="p-4 border-t border-gray-100">
+                {!isInstalled && (
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); triggerInstall(); }}
+                    className="w-full bg-primary/10 text-primary font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors"
+                  >
+                    <Download size={18} /> Add to home screen
+                  </button>
+                )}
+                <p className="text-center text-[10px] text-gray-400 mt-4">© 2026 sort it. · v1.2.0</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

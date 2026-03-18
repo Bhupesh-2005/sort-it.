@@ -48,6 +48,8 @@ export function AppProvider({ children }) {
   // ── PWA Install ──
   const [installPrompt, setInstallPrompt] = useState(null);  // deferred prompt event
   const [installDismissed, setInstallDismissed] = useState(false); // banner was closed
+  const [showInstallHint, setShowInstallHint] = useState(false); // manually show install UI
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const [isInstalled, setIsInstalled] = useState(() =>
     window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
   );
@@ -66,7 +68,16 @@ export function AppProvider({ children }) {
   }, []);
 
   const triggerInstall = async () => {
-    if (!installPrompt) return;
+    if (isIOS) {
+      setShowInstallHint(true);
+      setInstallDismissed(false);
+      return;
+    }
+    if (!installPrompt) {
+      setShowInstallHint(true);
+      setInstallDismissed(false);
+      return;
+    }
     installPrompt.prompt();
     const { outcome } = await installPrompt.userChoice;
     if (outcome === 'accepted') {
@@ -76,7 +87,10 @@ export function AppProvider({ children }) {
     setInstallDismissed(false);
   };
 
-  const dismissInstall = () => setInstallDismissed(true);
+  const dismissInstall = () => {
+    setInstallDismissed(true);
+    setShowInstallHint(false);
+  };
 
   // Persist state
   useEffect(() => localStorage.setItem('sortit_logged_in', String(isLoggedIn)), [isLoggedIn]);
@@ -160,7 +174,8 @@ export function AppProvider({ children }) {
       addresses, addAddress, deleteAddress, setDefaultAddress,
       orders, placeOrder,
       searchQuery, setSearchQuery,
-      installPrompt, installDismissed, isInstalled, triggerInstall, dismissInstall
+      installPrompt, installDismissed, isInstalled, triggerInstall, dismissInstall,
+      showInstallHint, setShowInstallHint, isIOS
     }}>
       {children}
     </AppContext.Provider>

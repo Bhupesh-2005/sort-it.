@@ -4,14 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 
 export default function InstallPrompt() {
-  const { installPrompt, installDismissed, isInstalled, triggerInstall, dismissInstall } = useApp();
+  const { installPrompt, installDismissed, isInstalled, triggerInstall, dismissInstall, showInstallHint, isIOS } = useApp();
 
-  // Check if iOS
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-  // For iOS, show the banner once per session until dismissed
-  const showIOSHint = isIOS && !isInstalled && !installDismissed && !sessionStorage.getItem('iosInstallPromptShown');
-  const showAndroidBanner = !isIOS && !isInstalled && installPrompt && !installDismissed;
+  // For Android/Desktop: Show if native prompt is available OR if manually triggered
+  const showAndroidBanner = !isIOS && !isInstalled && (installPrompt || showInstallHint) && !installDismissed;
+  
+  // For iOS: Show if manually triggered OR if it's a new session hint
+  const showIOSHint = isIOS && !isInstalled && (showInstallHint || (!installDismissed && !sessionStorage.getItem('iosInstallPromptShown')));
 
   const handleClose = () => {
     if (isIOS) sessionStorage.setItem('iosInstallPromptShown', 'true');
