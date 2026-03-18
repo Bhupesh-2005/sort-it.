@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Search, Wallet, User, ShoppingCart, ChevronDown, Menu } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useApp } from '../context/AppContext';
 
@@ -9,6 +9,8 @@ export default function Header() {
   const { cartCount, toggleCart } = useCart();
   const { walletBalance, user } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const inputRef = useRef(null);
   
   const placeholders = [
     "Search 'vegetables'",
@@ -20,6 +22,13 @@ export default function Header() {
   const [phIndex, setPhIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Clear search query when navigating away from AllItems
+  useEffect(() => {
+    if (!location.pathname.startsWith('/all-items')) {
+      setSearchQuery('');
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setPhIndex((prev) => (prev + 1) % placeholders.length);
@@ -27,11 +36,18 @@ export default function Header() {
     return () => clearInterval(interval);
   }, [placeholders.length]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/all-items?search=${encodeURIComponent(searchQuery.trim())}`);
+  const handleSearchChange = (e) => {
+    const q = e.target.value;
+    setSearchQuery(q);
+    if (q.trim()) {
+      navigate(`/all-items?search=${encodeURIComponent(q.trim())}`, { replace: true });
     } else {
+      navigate('/all-items', { replace: true });
+    }
+  };
+
+  const handleSearchFocus = () => {
+    if (!location.pathname.startsWith('/all-items')) {
       navigate('/all-items');
     }
   };
@@ -72,7 +88,7 @@ export default function Header() {
           {/* Mobile Search Bar */}
           <div className="relative w-full h-11 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-inner flex items-center px-3 gap-2">
             <Search size={18} className="text-gray-400" />
-            <form className="relative flex-1 h-full" onSubmit={handleSearch}>
+            <div className="relative flex-1 h-full">
               <AnimatePresence mode="wait">
                 {!searchQuery && (
                 <motion.div
@@ -90,10 +106,11 @@ export default function Header() {
               <input 
                 type="text" 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
+                onFocus={handleSearchFocus}
                 className="w-full h-full bg-transparent outline-none text-sm text-gray-800 font-medium z-10 relative bg-opacity-0"
               />
-            </form>
+            </div>
           </div>
         </div>
 
@@ -115,7 +132,7 @@ export default function Header() {
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl relative h-12 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-inner flex items-center px-4 gap-3">
             <Search size={20} className="text-gray-400" />
-            <form className="relative flex-1 h-full" onSubmit={handleSearch}>
+            <div className="relative flex-1 h-full">
               <AnimatePresence mode="wait">
                 {!searchQuery && (
                 <motion.div
@@ -133,10 +150,11 @@ export default function Header() {
               <input 
                 type="text" 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
+                onFocus={handleSearchFocus}
                 className="w-full h-full bg-transparent outline-none text-sm text-gray-800 font-medium z-10 relative bg-opacity-0"
               />
-            </form>
+            </div>
           </div>
 
           {/* Action Icons */}
