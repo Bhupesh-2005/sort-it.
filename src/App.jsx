@@ -13,6 +13,7 @@ import Payments from './pages/Payments';
 import Support from './pages/Support';
 import Auth from './pages/Auth';
 import { useApp } from './context/AppContext';
+import CartBar from './components/CartBar';
 
 /* Redirects unauthenticated users to /login */
 function ProtectedRoute({ children }) {
@@ -56,6 +57,7 @@ function App() {
               </main>
               <Footer />
               <Cart />
+              <CartBar />
               <InstallPrompt />
             </div>
           }
